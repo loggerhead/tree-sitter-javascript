@@ -26,6 +26,79 @@ static inline void advance(TSLexer *lexer) { lexer->advance(lexer, false); }
 
 static inline void skip(TSLexer *lexer) { lexer->advance(lexer, true); }
 
+static bool scan_escape_sequence(TSLexer *lexer) {
+    if (lexer->lookahead != '\\') {
+        return false;
+    }
+
+    advance(lexer);
+    lexer->mark_end(lexer);
+
+    if (lexer->lookahead == 0) {
+        return false;
+    }
+
+    switch (lexer->lookahead) {
+        case 'x': {
+            advance(lexer);
+            if (!iswxdigit(lexer->lookahead)) return false;
+            advance(lexer);
+            if (!iswxdigit(lexer->lookahead)) return false;
+            advance(lexer);
+            break;
+        }
+        case 'u': {
+            advance(lexer);
+            if (lexer->lookahead == '{') {
+                advance(lexer);
+                if (!iswxdigit(lexer->lookahead)) return false;
+                while (iswxdigit(lexer->lookahead)) advance(lexer);
+                if (lexer->lookahead != '}') return false;
+                advance(lexer);
+            } else {
+                for (int i = 0; i < 4; i++) {
+                    if (!iswxdigit(lexer->lookahead)) return false;
+                    advance(lexer);
+                }
+            }
+            break;
+        }
+        case '0':
+        case '1':
+        case '2':
+        case '3':
+        case '4':
+        case '5':
+        case '6':
+        case '7': {
+            advance(lexer);
+            for (int i = 0; i < 2; i++) {
+                if (lexer->lookahead < '0' || lexer->lookahead > '7') break;
+                advance(lexer);
+            }
+            break;
+        }
+        case '\r':
+            advance(lexer);
+            if (lexer->lookahead == '\n') {
+                advance(lexer);
+            }
+            break;
+        case '\n':
+        case 0x2028:
+        case 0x2029:
+            advance(lexer);
+            break;
+        default:
+            advance(lexer);
+            break;
+    }
+
+    lexer->mark_end(lexer);
+    lexer->result_symbol = ESCAPE_SEQUENCE;
+    return true;
+}
+
 static bool scan_template_chars(TSLexer *lexer) {
     lexer->result_symbol = TEMPLATE_CHARS;
     for (bool has_content = false;; has_content = true) {
@@ -339,6 +412,10 @@ bool tree_sitter_javascript_external_scanner_scan(void *payload, TSLexer *lexer,
     }
 
     if (valid_symbols[JSX_TEXT] && scan_jsx_text(lexer)) {
+        return true;
+    }
+
+    if (valid_symbols[ESCAPE_SEQUENCE] && lexer->lookahead == '\\' && scan_escape_sequence(lexer)) {
         return true;
     }
 

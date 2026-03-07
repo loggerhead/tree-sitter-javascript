@@ -18,7 +18,6 @@ module.exports = grammar({
   ],
 
   extras: $ => [
-    $.html_comment,
     /[\s\p{Zs}\uFEFF\u2028\u2029\u2060\u200B]/,
   ],
 
@@ -38,9 +37,7 @@ module.exports = grammar({
   ],
 
   rules: {
-    program: $ => seq(
-      repeat($.expression_statement),
-    ),
+    program: $ => $.expression,
 
     expression_statement: $ => $.expression,
 
@@ -51,7 +48,7 @@ module.exports = grammar({
       $.parenthesized_expression,
       $.number,
       $.string,
-      $.template_string,
+      // $.template_string,
       $.true,
       $.false,
       $.null,

@@ -3,16 +3,8 @@
   "name": "javascript",
   "rules": {
     "program": {
-      "type": "SEQ",
-      "members": [
-        {
-          "type": "REPEAT",
-          "content": {
-            "type": "SYMBOL",
-            "name": "expression_statement"
-          }
-        }
-      ]
+      "type": "SYMBOL",
+      "name": "expression"
     },
     "expression_statement": {
       "type": "SYMBOL",
@@ -40,10 +32,6 @@
         {
           "type": "SYMBOL",
           "name": "string"
-        },
-        {
-          "type": "SYMBOL",
-          "name": "template_string"
         },
         {
           "type": "SYMBOL",
@@ -992,10 +980,6 @@
     }
   },
   "extras": [
-    {
-      "type": "SYMBOL",
-      "name": "html_comment"
-    },
     {
       "type": "PATTERN",
       "value": "[\\s\\p{Zs}\\uFEFF\\u2028\\u2029\\u2060\\u200B]"
